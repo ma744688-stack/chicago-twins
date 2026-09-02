@@ -1,0 +1,47 @@
+name: Build Chicago Twins APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: تحميل المشروع
+        uses: actions/checkout@v4
+
+      - name: إعداد Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: إعداد Android
+        uses: android-actions/setup-android@v3
+
+      - name: تثبيت Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: تثبيت Gradle
+        run: |
+          curl -L https://services.gradle.org/distributions/gradle-8.10.2-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+          echo "/tmp/gradle-8.10.2/bin" >> $GITHUB_PATH
+
+      - name: فك مشروع شيكاقو توينز
+        run: |
+          mkdir project
+          unzip -q Chicago_Twins_APK_Project.zip -d project
+
+      - name: بناء APK
+        working-directory: project
+        run: gradle assembleRelease --no-daemon
+
+      - name: حفظ APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Chicago-Twins-APK
+          path: project/app/build/outputs/apk/release/app-release.apk
